@@ -93,7 +93,7 @@ class Criterion(ABC):
         Parameters
         ----------
         predictions : :class:`numpy.ndarray`
-            A vector with the pre-softmax predictions for some image.
+            A vector with the predictions (pre-softmax or not) for some image.
         label : int
             The label of the unperturbed reference image.
 
@@ -270,7 +270,7 @@ class OriginalClassProbability(Criterion):
 
     """
 
-    def __init__(self, p):
+    def __init__(self, p, softmax=False):
         super(OriginalClassProbability, self).__init__()
         assert 0 <= p <= 1
         self.p = p
@@ -279,7 +279,10 @@ class OriginalClassProbability(Criterion):
         return '{}-{:.04f}'.format(self.__class__.__name__, self.p)
 
     def is_adversarial(self, predictions, label):
-        probabilities = softmax(predictions)
+        if self.softmax:
+            probabilities = softmax(predictions)
+        else:
+            probabilities = predictions
         return probabilities[label] < self.p
 
 
@@ -305,7 +308,7 @@ class TargetClassProbability(Criterion):
 
     """
 
-    def __init__(self, target_class, p):
+    def __init__(self, target_class, p, softmax=False):
         super(TargetClassProbability, self).__init__()
         self._target_class = target_class
         assert 0 <= p <= 1
@@ -319,5 +322,8 @@ class TargetClassProbability(Criterion):
             self.__class__.__name__, self.target_class(), self.p)
 
     def is_adversarial(self, predictions, label):
-        probabilities = softmax(predictions)
+        if self.softmax:
+            probabilities = softmax(predictions)
+        else:
+            probabilities = predictions
         return probabilities[self.target_class()] > self.p
