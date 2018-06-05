@@ -267,19 +267,23 @@ class OriginalClassProbability(Criterion):
         The threshold probability. If the probability of the
         original class is below this threshold, the image is
         considered an adversarial. It must satisfy 0 <= p <= 1.
+    pre_softmax : bool
+        Indicates if the predicted values need to be transformed
+        into probabilities using softmax.
 
     """
 
-    def __init__(self, p, softmax=False):
+    def __init__(self, p, pre_softmax=False):
         super(OriginalClassProbability, self).__init__()
         assert 0 <= p <= 1
         self.p = p
+        self.pre_softmax = pre_softmax
 
     def name(self):
         return '{}-{:.04f}'.format(self.__class__.__name__, self.p)
 
     def is_adversarial(self, predictions, label):
-        if self.softmax:
+        if self.pre_softmax:
             probabilities = softmax(predictions)
         else:
             probabilities = predictions
@@ -305,14 +309,18 @@ class TargetClassProbability(Criterion):
         The threshold probability. If the probability of the
         target class is above this threshold, the image is
         considered an adversarial. It must satisfy 0 <= p <= 1.
+    pre_softmax : bool
+        Indicates if the predicted values need to be transformed
+        into probabilities using softmax.
 
     """
 
-    def __init__(self, target_class, p, softmax=False):
+    def __init__(self, target_class, p, pre_softmax=False):
         super(TargetClassProbability, self).__init__()
         self._target_class = target_class
         assert 0 <= p <= 1
         self.p = p
+        self.pre_softmax = pre_softmax
 
     def target_class(self):
         return self._target_class
@@ -322,7 +330,7 @@ class TargetClassProbability(Criterion):
             self.__class__.__name__, self.target_class(), self.p)
 
     def is_adversarial(self, predictions, label):
-        if self.softmax:
+        if self.pre_softmax:
             probabilities = softmax(predictions)
         else:
             probabilities = predictions
